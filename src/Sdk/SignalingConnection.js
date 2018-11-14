@@ -13,7 +13,7 @@ class SignalingConnection extends EventEmitter{
      */
     connectToSocket = () => {
         let serverUrl = `ws://${this.sockURI}`;
-        this.connection = new WebSocket(serverUrl, 'json');
+        this.connection = new WebSocket(serverUrl);
         this.connection.onopen = () => this.onOpen();
     };
 

@@ -1,5 +1,39 @@
 $width:10px;
 
+.main-device{
+    .local-video {
+        margin:15px;
+        video{
+            width:300px;
+            height:200px;
+            border:1px solid #045DB1;
+            background:#A9A9A9;
+            margin-right:15px;
+        }
+    }
+    
+}
+.popover{
+
+    input{
+        border:1px solid #A9A9A9;
+        padding:3px 10px;
+        margin-right:10px;
+        border-radius:2px;
+    }
+    Button{
+        margin-top:30px;
+    }
+}
+
+.btn-device {
+    margin-top:15px;
+    Button {
+        margin-left:15px;
+    }
+    
+}
+
 .btn{
     button{
         background:#ee1542;
