@@ -1,0 +1,25 @@
+$width:10px;
+
+.btn{
+    button{
+        background:#ee1542;
+        border:none;
+        color:#FFF;
+        margin-left:15px;
+        padding:5px 15px;
+        border-radius:5px;
+    }
+    > div {
+        clear:both;
+        > div {
+            float:left;
+            textarea {
+                border:2px solid #A9A9A9;
+
+            }
+        }
+        > div:first-child{
+            margin-right:$width*3;
+        }
+    }
+}
