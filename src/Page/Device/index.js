@@ -1,15 +1,23 @@
 import React, {Component} from 'react';
+import EventEmitter from 'events';
 import {Button,message,Input,Popover} from 'antd';
 import SignalingConnection from '../../Sdk/SignalingConnection';
 import '../../Scss/device.scss';
+import {
+    receiveLogin,
+    receiveSdp
+} from '../../Util/connect';
+
+
 class DevicePeer extends Component {
     constructor(props) {
         super(props);
         this.state = {
             visible:false
         }
+        
     }
-
+    Yfz = null;
     localVideoRef = React.createRef();
     remoteVideoRef = React.createRef();
     
@@ -20,16 +28,60 @@ class DevicePeer extends Component {
         }catch (e) {
             message.error('获取本地媒体失败');
         }
+        
     };
     
     //连接设备
-    handleConnectDevice = () => {
+    handleConnectDevice = async () => {
         this.setState({
             visible:false
         });
-        console.log(this.inputNode.value);
+        this.Yfz = new SignalingConnection({
+            socketURL:`192.168.13.78:5001`,
+            onOpen:this.onOpen,
+            onMessage: event => {
+                console.log("begoliu",event);
+            }
+        });
+      
+        this.Yfz.addMsgListener((msg)=> {
+            console.log("addMsg",msg);
+            if(typeof msg === 'string') {
+                msg = JSON.parse(msg);
+            }
+            switch (msg.data.type) {
+                case '1001':
+                    receiveLogin(msg,this.Yfz);
+                    break;
+                case '1002':
+                    receiveSdp(msg,this.Yfz);
+                    break;
+                default:
+                    break;
+            }
+            
+            
+        })
+    };
 
+ 
 
+    onOpen = () => {
+        console.log("connect open success");
+        //发送登录信息
+        this.Yfz.on('login',receiveLogin);   //1
+        this.Yfz.sendToSignalingMsg(this.sendMsgFormat(this.inputNode.value));  
+    };
+    
+    
+    //信息格式化
+    sendMsgFormat = (devId) => {
+        let msg = {
+            type:'1001',
+            devMode: 4,
+            devId
+        };
+        return JSON.stringify(msg);
     };
     
     //关闭form Device window

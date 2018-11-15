@@ -16,7 +16,7 @@ function log(text) {
 
 //已注册的设备号
 
-let devices = []; 
+let devices = ['123456','aa1234']; 
 
 /**
  * 注册设备号
@@ -25,8 +25,6 @@ let devices = [];
 function registerDevice(devId) {
     if(devices.indexOf(devId) === -1) {
         devices.push(devId);
-    }else {
-        
     }
 }
 
@@ -70,8 +68,11 @@ wss.on('connection', function connection(ws,req) {
         if(typeof msg === 'string') {
             msg = JSON.parse(msg);
         }
+        
         switch (msg.type) {
             case '1001' :
+                console.log("devices",devices);
+                registerDevice(msg.devId);
                 let result = devices.indexOf(msg.devId) !== -1 ? 0 : 2;
                  let login = {
                     type:'_login',
