@@ -56,6 +56,7 @@ class DevicePeer extends Component {
                 case '1002':
                     receiveSdp(msg,this.Yfz);
                     break;
+                case '1030':
                 default:
                     break;
             }

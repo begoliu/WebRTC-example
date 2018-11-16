@@ -1,3 +1,4 @@
+import {message} from 'antd';
 class RTCEngine {
     // 1. 乙通过websocket发送登录设备的长连接,同时创建PC实例
     // 2. 甲和乙各自建立一个PC实例
@@ -14,7 +15,8 @@ class RTCEngine {
                     signalingConnection,
                     gotRemoteStream,
                     gotRemoteTrack,
-                    onClose
+                    onClose,
+                    iceServers,
 
                 }) {
         this.onClose = onClose;
@@ -25,27 +27,34 @@ class RTCEngine {
                 credential: 'turnserver'
             }]
         });
+        this.iceServers = iceServers;
         this.signalingConnection = signalingConnection;
     }
 
-    onSignalingMessage = (msg) => {
-        switch (msg.type) {
 
-
+    createPeerConnection = (iceDesc,offer) => {
+        let rtcDevice = new RTCPeerConnection({iceServers:this.iceServers});
+        rtcDevice.onicecandidate = event => this.onIceCandidate(rtcDevice,event,iceDesc);
+        
+        
+    };
+    
+    onIceCandidate = async (rtc,event,iceDesc) => {
+        try {
+            //发送send icedate
+            await rtc.addIceCandidate(iceDesc);
+        }catch (e) {
+            console.error("ice error: ", e);
+            message.error("监听ice失败");
         }
     };
 
-    // videoOffer = ({sdp}) => {
-    //     this.peerConnection.setRemoteDescription(new RTCSessionDescription(sdp)).catch(err => {
-    //        console.error(`setRemoteDesc videoOffer Error : ${err}`)
-    //     })
-    // };
-    //
-    // newIceCandiDate = ({candidate}) => {
-    //     this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate)).catch(err => {
-    //         console.error(`addIcecandidate Error : ${err}`)
-    //     })
-    // }
+    onSignalingMessage = (msg) => {
+        switch (msg.type) {
+            
+
+        }
+    };
 
 
     setOffer = async ({sdp}) => {

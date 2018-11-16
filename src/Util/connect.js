@@ -1,5 +1,19 @@
 import {message} from 'antd';
-import RTC from '../Sdk/RTCEngine';
+import RTCEngine from '../Sdk/RTCEngine';
+import SignalingConnection from '../Sdk/SignalingConnection';
+
+
+
+
+
+
+
+
+
+
+
+
+
 //发送登录 数据包
 export function sendLogin(){
     console.log("sendLogin");
@@ -41,7 +55,9 @@ export function receiveLogin(msg,socket) {
                 devId:msg.data.devId,
                 sdp:"sdp data"
             };
-            socket.sendToSignalingMsg(JSON.stringify(answer));
+            let RTC = new RTCEngine({signalingConnection:socket});
+            //socket.sendToSignalingMsg(JSON.stringify(answer));
+            
             
             
             message.success('连接成功');
