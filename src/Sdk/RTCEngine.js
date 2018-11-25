@@ -35,10 +35,10 @@ class RTCEngine {
     createPeerConnection = (iceDesc,offer) => {
         let rtcDevice = new RTCPeerConnection({iceServers:this.iceServers});
         rtcDevice.onicecandidate = event => this.onIceCandidate(rtcDevice,event,iceDesc);
-        
-        
+
+
     };
-    
+
     onIceCandidate = async (rtc,event,iceDesc) => {
         try {
             //发送send icedate
@@ -51,13 +51,13 @@ class RTCEngine {
 
     onSignalingMessage = (msg) => {
         switch (msg.type) {
-            
+
 
         }
     };
 
 
-    setOffer = async ({sdp}) => {
+    setOffer = async (sdp) => {
         //接收signalingServer发送过来的的sdp
         const offer = {
             type:'offer',
@@ -65,7 +65,9 @@ class RTCEngine {
         };
         try {
             await this.peerConnection.setRemoteDescription(offer);
+            message.success("设置offer成功!");
         }catch (e) {
+            message.error("设置offer失败");
             console.error(`setRemoteDesc videoOffer Error : ${e}`)
         }
     };
@@ -80,6 +82,7 @@ class RTCEngine {
             //发送answer的sdp给signalingServer   answer.sdp
 
         }catch (e) {
+            message.error("创建answer失败");
             console.error(`setRemoteDesc createAnswer Error : ${e}`)
         }
     };
@@ -96,8 +99,6 @@ class RTCEngine {
             console.error(`addIcecandidate Error : ${e}`)
         }
     };
-
-
 
     close = ()=>{
         this.peerConnection.close();

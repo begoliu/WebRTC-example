@@ -16,7 +16,7 @@ function log(text) {
 
 //已注册的设备号
 
-let devices = ['123456','aa1234']; 
+let devices = ['123456'];
 
 /**
  * 注册设备号
@@ -49,7 +49,7 @@ let httpsServer = http.createServer((request,response) => {
     log("Received secure request for " + request.url);
     response.write("Hello world");
     response.end();
-    
+
 });
 
 const wss = new WebSocket.Server({server:httpsServer});
@@ -61,14 +61,14 @@ wss.on('connection', function connection(ws,req) {
     ws.id = `${req.connection.remoteAddress} - ${uuidv4()}`;
     log(`[connect] form ${ws.id}`);
     ws.on('close',req => {
-       log(`[disconnect] exit ${ws.id}`) 
+       log(`[disconnect] exit ${ws.id}`)
     });
     ws.on('message', msg => {
         log(`[Server] Received : ${msg}`);
         if(typeof msg === 'string') {
             msg = JSON.parse(msg);
         }
-        
+
         switch (msg.type) {
             case '1001' :
                 console.log("devices",devices);
@@ -83,7 +83,20 @@ wss.on('connection', function connection(ws,req) {
                         result    //0 匹配成功   1 失败,设备已满  2 失败,无效设备
                     }
                 };
+                 if(result === 0){
+                     let offer = {
+                         type:'_offer',
+                         data:{
+                             type:'1010',
+                             devMode:msg.devMode,
+                             devId:msg.devId,
+                             sdp:'offer sdp'
+                         }
+                     };
+                     ws.send(JSON.stringify(offer));
+                 }
                 ws.send(JSON.stringify(login));
+
                 break;
             case '1002' :
                 let heart = {
@@ -108,7 +121,7 @@ wss.on('connection', function connection(ws,req) {
                 };
                 connection.send(JSON.stringify(exit));
                 break;
-            
+
             case '1010' :
                 let offerSdp = {
                     type:'_offerSdp',
@@ -134,12 +147,12 @@ wss.on('connection', function connection(ws,req) {
                 ws.send(JSON.stringify(iceCandidate));
                 break;
             default:
-                
+
                 break;
         }
-        
+
     });
-    
+
 });
 
 

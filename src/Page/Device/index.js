@@ -7,7 +7,7 @@ import {
     receiveLogin,
     receiveSdp
 } from '../../Util/connect';
-
+import {promisify} from "../../Util/oftenUsedFun";
 
 class DevicePeer extends Component {
     constructor(props) {
@@ -15,12 +15,17 @@ class DevicePeer extends Component {
         this.state = {
             visible:false
         }
-        
+
     }
     Yfz = null;
+    RTC = null;
     localVideoRef = React.createRef();
     remoteVideoRef = React.createRef();
-    
+
+    componentDidMount() {
+        this.handleConnectDevice();
+    }
+
     //获取本地媒体
     start = async () => {
         try {
@@ -28,24 +33,23 @@ class DevicePeer extends Component {
         }catch (e) {
             message.error('获取本地媒体失败');
         }
-        
+
     };
-    
+
     //连接设备
-    handleConnectDevice = async () => {
+    handleConnectDevice = () => {
         this.setState({
             visible:false
         });
         this.Yfz = new SignalingConnection({
-            socketURL:`192.168.13.78:5001`,
-            onOpen:this.onOpen,
-            onMessage: event => {
-                console.log("begoliu",event);
-            }
+            socketURL:`127.0.0.1:5001`,
+            onOpen:this.onOpen
         });
-      
-        this.Yfz.addMsgListener((msg)=> {
-            console.log("addMsg",msg);
+        /**
+         * 发送登录信息
+         */
+        this.Yfz.addMsgListener(async msg => {
+            console.log("addMsg",JSON.stringify(msg));
             if(typeof msg === 'string') {
                 msg = JSON.parse(msg);
             }
@@ -54,42 +58,46 @@ class DevicePeer extends Component {
                     receiveLogin(msg,this.Yfz);
                     break;
                 case '1002':
-                    receiveSdp(msg,this.Yfz);
+                    await receiveSdp(msg,this.Yfz);
                     break;
-                case '1030':
+                //offer sdp
+                case '1010':
+                    this.RTC = await receiveSdp(msg,this.Yfz);
+                    await this.RTC.createAnswer(this.Yfz);
+                    break;
                 default:
                     break;
             }
-            
-            
-        })
+        });
+
     };
 
- 
+
 
     onOpen = () => {
         console.log("connect open success");
         //发送登录信息
-        this.Yfz.on('login',receiveLogin);   //1
-        this.Yfz.sendToSignalingMsg(this.sendMsgFormat(this.inputNode.value));  
+        // this.Yfz.on('login',receiveLogin);   //1
+        this.Yfz.sendToSignalingMsg(this.sendMsgFormat('1001'));
     };
-    
-    
+
+
     //信息格式化
-    sendMsgFormat = (devId) => {
+    sendMsgFormat = (type,data) => {
         let msg = {
-            type:'1001',
+            type:type,
             devMode: 4,
-            devId
+            devId:'123456',
+            data
         };
         return JSON.stringify(msg);
     };
-    
+
     //关闭form Device window
     handleVisibleChange = (visible) => {
         this.setState({ visible });
     };
-    
+
     render() {
         return (
             <div className='main-device'>
@@ -101,9 +109,9 @@ class DevicePeer extends Component {
                     <Button type='primary' disabled>setOffer</Button>
                     <Button type='primary' disabled>createAnswer</Button>
                     <Button type='primary' disabled>setAnswer</Button>
-                    
-                    <Popover 
-                        placement="bottom" 
+
+                    <Popover
+                        placement="bottom"
                         title="connect device"
                         onVisibleChange = {this.handleVisibleChange}
                         visible={this.state.visible}

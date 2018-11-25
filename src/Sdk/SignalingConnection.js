@@ -9,13 +9,11 @@ class SignalingConnection extends EventEmitter{
         // this.cb = cb;
         this.connectToSocket();
         this.messageListeners = [];
-        
+
     }
     connection = null;
 
-    promise = new Promise(resolve => {
-        console.log(resolve);
-    });
+
     /**
      * 连接socket
      */
@@ -25,24 +23,25 @@ class SignalingConnection extends EventEmitter{
         this.connection.onopen = () => this.onOpen();
         this.connection.onmessage = event => {
             let msg = JSON.parse(event.data);
-            console.table("message received : "+ msg);
+            console.log("message received : ", msg);
             this.messageListeners.forEach(func => func(msg));
         }
-        
+
+
     };
 
     /**
      * 重连webSocket
      */
     reconnectToSocket = () => {
-        
-        
+
+
     };
-    
+
 
     createWebSocket = (callback) => {
-        
-        
+
+
     };
 
     /**
@@ -50,14 +49,21 @@ class SignalingConnection extends EventEmitter{
      * @param msg
      */
     sendToSignalingMsg = msg => {
+        let typeMsg;
         if(typeof msg !== 'string') {
             msg = JSON.stringify(msg);
+        }else{
+            let type = JSON.parse(msg).type;
+            switch (type) {
+                case '1001':
+                    typeMsg = 'login';
+                    break;
+            }
         }
-        console.log('[client send signaling] msg : ', msg);
-        //console.log(typeof msg);
+        console.log(`[client send signaling] ${typeMsg} : `, msg);
         this.connection.send(msg);
     };
-    
+
     /**
      * 接收服务器返回的信息
      * @param msg
@@ -65,7 +71,7 @@ class SignalingConnection extends EventEmitter{
     receiveServerMessage = (msg) => {
         console.log(`[from server] receive signaling server : ${msg}`);
         let msgJson = JSON.parse(msg);
-        
+
         switch (msgJson.data.type) {
             case '1001':
                 //登录
