@@ -95,7 +95,6 @@ class LocalPeerToPeer extends Component {
     };
 
     onCreateOfferSuccess = (desc) => {
-        console.log("BegoCount");
         let {localPC,remotePC} = this.state;
         trace(`offer from localPC desc.sdp: ${desc.sdp}`);
         localPC.setLocalDescription(desc).then(()=>{

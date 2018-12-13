@@ -47,7 +47,7 @@ function sendIceSdp(candidate) {
  */
 export function receiveLogin(msg,socket) {
     console.log("receiveLogin", msg);
-    switch (msg.data.result) {
+    switch (msg.result) {
         case 0 :
             message.success('socket连接成功');
             break;
@@ -64,18 +64,21 @@ export function receiveLogin(msg,socket) {
 }
 
 //接收sdp 数据包
-export async function receiveSdp(desc,socket) {
+export function receiveSdp(desc,socket) {
     console.log(`[Client] receive sdp:`, desc);
+    console.log(`[Client] receive offer sdp:`, JSON.parse(desc.sdp));
     let answer = {
         type:'1010',
         devMode:4,
-        devId:desc.data.devId,
-        sdp:"sdp data"
+        devId:desc.devId,
+        sdp:JSON.parse(desc.sdp).sdp
     };
+    console.log("answer : ", answer);
     let RTC = new RTCEngine({signalingConnection:socket});
 
     //设置offer描述
-    await RTC.setOffer(desc.data.sdp);
+    RTC.setOffer(JSON.parse(desc.sdp));
+    console.log("rtc - setOffer",JSON.parse(desc.sdp));
     return RTC;
 }
 

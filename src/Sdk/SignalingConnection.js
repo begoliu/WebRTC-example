@@ -16,6 +16,8 @@ class SignalingConnection extends EventEmitter{
 
     /**
      * 连接socket
+     * 
+     * 116.62.244.19 13001
      */
     connectToSocket = () => {
         let serverUrl = `ws://${this.sockURI}`;
@@ -57,6 +59,11 @@ class SignalingConnection extends EventEmitter{
             switch (type) {
                 case '1001':
                     typeMsg = 'login';
+                    break;
+                case '1010':
+                    typeMsg = 'answer';
+                    break;
+                default:
                     break;
             }
         }

@@ -1,5 +1,7 @@
 import {message} from 'antd';
 class RTCEngine {
+    
+    //sdp 步骤
     // 1. 乙通过websocket发送登录设备的长连接,同时创建PC实例
     // 2. 甲和乙各自建立一个PC实例
     // 3. 甲通过PC所提供的createOffer()方法建立一个包含甲的SDP描述符的offer信令
@@ -10,24 +12,31 @@ class RTCEngine {
     // 8. 乙通过PC所提供的setLocalDescription()方法，将乙的SDP描述符交给乙的PC实例
     // 9. 乙将answer信令通过服务器发送给甲
     // 10. 甲接收到乙的answer信令后，将其中乙的SDP描述符提取出来，调用setRemoteDescripttion()方法交给甲自己的PC实例
-
+    
+    //ice 步骤
+    
+    // 1. 甲
+    
+    
+    
     constructor({
                     signalingConnection,
-                    gotRemoteStream,
-                    gotRemoteTrack,
-                    onClose,
-                    iceServers,
+                    // gotRemoteStream,
+                    // gotRemoteTrack,
+                    // onClose,
+                    // iceServers,
 
                 }) {
-        this.onClose = onClose;
+        // this.onClose = onClose;
         this.peerConnection = new RTCPeerConnection({
             iceServers: [{
-                urls: `turn:${window.location.hostname}`,
-                username: 'webrtc',
+                urls: `stun:116.62.244.19:3478`,
+                username: 'demo',
+                password:'123456',
                 credential: 'turnserver'
             }]
         });
-        this.iceServers = iceServers;
+        // this.iceServers = iceServers;
         this.signalingConnection = signalingConnection;
     }
 
@@ -65,6 +74,9 @@ class RTCEngine {
         };
         try {
             await this.peerConnection.setRemoteDescription(offer);
+
+            
+            
             message.success("设置offer成功!");
         }catch (e) {
             message.error("设置offer失败");
@@ -79,7 +91,11 @@ class RTCEngine {
     createAnswer = async () => {
         try {
             const answer = await this.peerConnection.createAnswer();
-            //发送answer的sdp给signalingServer   answer.sdp
+            //发送answer的sdp给signalingServer   answer.sdp.
+            this.signalingConnection.sendToSignalingMsg({
+                type:'answer',
+                sdp:answer
+            })
 
         }catch (e) {
             message.error("创建answer失败");

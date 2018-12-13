@@ -42,7 +42,7 @@ class DevicePeer extends Component {
             visible:false
         });
         this.Yfz = new SignalingConnection({
-            socketURL:`127.0.0.1:5001`,
+            socketURL:`116.62.244.19:13001`,
             onOpen:this.onOpen
         });
         /**
@@ -53,7 +53,7 @@ class DevicePeer extends Component {
             if(typeof msg === 'string') {
                 msg = JSON.parse(msg);
             }
-            switch (msg.data.type) {
+            switch (msg.type) {
                 case '1001':
                     receiveLogin(msg,this.Yfz);
                     break;
@@ -63,6 +63,7 @@ class DevicePeer extends Component {
                 //offer sdp
                 case '1010':
                     this.RTC = await receiveSdp(msg,this.Yfz);
+                    console.log("rtc - createAnswer");
                     await this.RTC.createAnswer(this.Yfz);
                     break;
                 default:
@@ -87,9 +88,10 @@ class DevicePeer extends Component {
         let msg = {
             type:type,
             devMode: 4,
-            devId:'123456',
-            data
+            devId:'8AEBB5C80B31'
+            // sdp:"offer sdp"
         };
+        
         return JSON.stringify(msg);
     };
 
