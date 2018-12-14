@@ -26,6 +26,12 @@ class LocalPeerToPeer extends Component {
     //开始
     handleStart = () => {
         navigator.mediaDevices.getUserMedia({video: true}).then(this.gotLocalMediaStream).catch(this.gotLocalMediaStreamErr);
+        
+        let pc = new RTCPeerConnection(this.state.servers);
+        pc.onicecandidate = event => {
+            console.log("ice-bego111", event);
+        }
+        
     };
 
     //从设备中获取本地流
@@ -77,7 +83,6 @@ class LocalPeerToPeer extends Component {
         //console.log("localPC", localPC);
         localPC.onicecandidate = e => this.onIceCandiDate(remotePC,e);
         localPC.onconnectionstatechange = e => this.onIceStateChange(localPC,e);
-
         remotePC.onicecandidate = e => this.onIceCandiDate(localPC,e);
         remotePC.onconnectionstatechange = e => this.onIceStateChange(remotePC,e);
         remotePC.ontrack = this.gotRemoteStream;
@@ -134,6 +139,7 @@ class LocalPeerToPeer extends Component {
         if(iceCandiDate){
             let newIceCandiDate = new RTCIceCandidate(iceCandiDate);
             let offerPeer = this.gotOfterPeer(peerConnection);
+            console.log("IceCandiDateObj",newIceCandiDate);
             offerPeer.addIceCandidate(newIceCandiDate).then(()=>{this.peerConnectionSuccessful(peerConnection)}).catch(err => this.peerConnectionError(peerConnection,err));
         }
     };

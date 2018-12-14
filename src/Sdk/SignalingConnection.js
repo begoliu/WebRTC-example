@@ -67,7 +67,8 @@ class SignalingConnection extends EventEmitter{
                     break;
             }
         }
-        console.log(`[client send signaling] ${typeMsg} : `, msg);
+        
+        console.log(`[client send signaling] ${typeMsg} : `, JSON.stringify(msg));
         this.connection.send(msg);
     };
 

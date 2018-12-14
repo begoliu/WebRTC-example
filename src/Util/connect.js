@@ -20,24 +20,24 @@ export function sendLogin(){
 }
 
 //发送心跳 数据包 重连
-function sendHeart() {
+export function sendHeart() {
 
 }
 
 
 //发送退出 数据包
-function sendExit() {
+export function sendExit() {
 
 }
 
 //发送sdp 数据包
-function sendSdp(ws,desc) {
+export function sendSdp(ws,desc) {
 
 
 }
 
 //发送ice 数据包
-function sendIceSdp(candidate) {
+export function sendIceSdp(candidate) {
 
 }
 
@@ -50,6 +50,9 @@ export function receiveLogin(msg,socket) {
     switch (msg.result) {
         case 0 :
             message.success('socket连接成功');
+            let RTC = new RTCEngine({signalingConnection:socket});
+            RTC.createPeerConnection();
+            
             break;
         case 1 :
             message.error('设备被占用,连接失败');
@@ -65,7 +68,6 @@ export function receiveLogin(msg,socket) {
 
 //接收sdp 数据包
 export function receiveSdp(desc,socket) {
-    console.log(`[Client] receive sdp:`, desc);
     console.log(`[Client] receive offer sdp:`, JSON.parse(desc.sdp));
     let answer = {
         type:'1010',
@@ -73,35 +75,47 @@ export function receiveSdp(desc,socket) {
         devId:desc.devId,
         sdp:JSON.parse(desc.sdp).sdp
     };
-    console.log("answer : ", answer);
     let RTC = new RTCEngine({signalingConnection:socket});
-
     //设置offer描述
     RTC.setOffer(JSON.parse(desc.sdp));
     console.log("rtc - setOffer",JSON.parse(desc.sdp));
+    // RTC.onicecandidate(ice => {
+    //     console.log("IceCandiDateObj-send",ice);
+    // });
     return RTC;
 }
 
 
 
 //接收ice 数据包
-function receiveIce(candidate) {
-    console.log(candidate);
+export function receiveIce(candidate,rtc) {
+    
+    let params = JSON.parse(candidate.data);
+    /**
+     * iceCandidate对象
+     * @type {{candidate: *, sdpMLineIndex: *, sdpMid: *}}
+     */
+    let iceCandidate = {
+        candidate:params.candidate,
+        sdpMLineIndex:params.label,
+        sdpMid:params.id,
+    };
+    rtc.addIcecandidate(iceCandidate);
 
 }
 
 //json转str
-function json2str(msg) {
+export function json2str(msg) {
     return JSON.stringify(msg);
 }
 
 //解析json包
-function str2json(msg) {
+export function str2json(msg) {
     return JSON.parse(msg)
 }
 
 
 
-function initSdk (type,cb) {
+export function initSdk (type,cb) {
 
 }

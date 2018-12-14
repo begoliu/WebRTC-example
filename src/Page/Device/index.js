@@ -1,13 +1,13 @@
 import React, {Component} from 'react';
-import EventEmitter from 'events';
-import {Button,message,Input,Popover} from 'antd';
+import {Button,message,Popover} from 'antd';
 import SignalingConnection from '../../Sdk/SignalingConnection';
 import '../../Scss/device.scss';
 import {
     receiveLogin,
-    receiveSdp
+    receiveSdp,
+    receiveIce
 } from '../../Util/connect';
-import {promisify} from "../../Util/oftenUsedFun";
+
 
 class DevicePeer extends Component {
     constructor(props) {
@@ -23,7 +23,7 @@ class DevicePeer extends Component {
     remoteVideoRef = React.createRef();
 
     componentDidMount() {
-        this.handleConnectDevice();
+        
     }
 
     //获取本地媒体
@@ -49,7 +49,7 @@ class DevicePeer extends Component {
          * 发送登录信息
          */
         this.Yfz.addMsgListener(async msg => {
-            console.log("addMsg",JSON.stringify(msg));
+            console.log("[Clinent ]",JSON.stringify(msg));
             if(typeof msg === 'string') {
                 msg = JSON.parse(msg);
             }
@@ -60,11 +60,14 @@ class DevicePeer extends Component {
                 case '1002':
                     await receiveSdp(msg,this.Yfz);
                     break;
-                //offer sdp
                 case '1010':
                     this.RTC = await receiveSdp(msg,this.Yfz);
-                    console.log("rtc - createAnswer");
+                    console.log("rtc - createAnswer",this.RTC);
                     await this.RTC.createAnswer(this.Yfz);
+                    break;
+                case '1011':
+                    console.log("1011-rtc",this.RTC);
+                    receiveIce(msg,this.RTC);
                     break;
                 default:
                     break;
@@ -79,19 +82,20 @@ class DevicePeer extends Component {
         console.log("connect open success");
         //发送登录信息
         // this.Yfz.on('login',receiveLogin);   //1
-        this.Yfz.sendToSignalingMsg(this.sendMsgFormat('1001'));
+        this.Yfz.sendToSignalingMsg({
+            type:'1001',
+            devMode: 4,
+            devId:'725B4AC56CE7'
+        });
     };
-
 
     //信息格式化
     sendMsgFormat = (type,data) => {
         let msg = {
             type:type,
             devMode: 4,
-            devId:'8AEBB5C80B31'
-            // sdp:"offer sdp"
+            devId:'725B4AC56CE7'
         };
-        
         return JSON.stringify(msg);
     };
 
@@ -99,13 +103,15 @@ class DevicePeer extends Component {
     handleVisibleChange = (visible) => {
         this.setState({ visible });
     };
-
+    
+    
     render() {
         return (
             <div className='main-device'>
                 <div className='btn-device'>
                     <Button type='primary'>start ws</Button>
                     <Button type='primary' onClick={this.start}>start</Button>
+                    <Button type='primary' onClick={this.handleConnectDevice}>connect</Button>
                     <Button type='primary' disabled>createRTC</Button>
                     <Button type='primary' disabled>createOffer</Button>
                     <Button type='primary' disabled>setOffer</Button>

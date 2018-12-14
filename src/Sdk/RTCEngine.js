@@ -20,15 +20,14 @@ class RTCEngine {
     
     
     constructor({
-                    signalingConnection,
-                    // gotRemoteStream,
-                    // gotRemoteTrack,
-                    // onClose,
-                    // iceServers,
+         signalingConnection,
+    }) {
+        this.signalingConnection = signalingConnection;
+    }
 
-                }) {
-        // this.onClose = onClose;
-        this.peerConnection = new RTCPeerConnection({
+
+    createPeerConnection = async () => {
+        let rtcDevice = new RTCPeerConnection({
             iceServers: [{
                 urls: `stun:116.62.244.19:3478`,
                 username: 'demo',
@@ -36,22 +35,20 @@ class RTCEngine {
                 credential: 'turnserver'
             }]
         });
-        // this.iceServers = iceServers;
-        this.signalingConnection = signalingConnection;
-    }
-
-
-    createPeerConnection = (iceDesc,offer) => {
-        let rtcDevice = new RTCPeerConnection({iceServers:this.iceServers});
-        rtcDevice.onicecandidate = event => this.onIceCandidate(rtcDevice,event,iceDesc);
+        this.peerConnection = rtcDevice;
+        console.log("ice-candidate", rtcDevice);
+        rtcDevice.onicecandidate = event => {
+            console.log("ice-candidate-event",event);
+        }
 
 
     };
 
-    onIceCandidate = async (rtc,event,iceDesc) => {
+    onIceCandidate = async (event,socket) => {
         try {
             //发送send icedate
-            await rtc.addIceCandidate(iceDesc);
+            console.log("ice-candidate",event);
+            //socket.sendToSignalingMsg(event);
         }catch (e) {
             console.error("ice error: ", e);
             message.error("监听ice失败");
@@ -68,15 +65,14 @@ class RTCEngine {
 
     setOffer = async (sdp) => {
         //接收signalingServer发送过来的的sdp
+        console.log("setOffer",sdp);
         const offer = {
             type:'offer',
-            sdp
+            sdp:sdp.sdp
         };
         try {
-            await this.peerConnection.setRemoteDescription(offer);
-
-            
-            
+            let answer = await this.peerConnection.setRemoteDescription(offer);
+            console.log("设置offer成功",answer);
             message.success("设置offer成功!");
         }catch (e) {
             message.error("设置offer失败");
@@ -91,12 +87,14 @@ class RTCEngine {
     createAnswer = async () => {
         try {
             const answer = await this.peerConnection.createAnswer();
+            console.log("send Answer", answer);
             //发送answer的sdp给signalingServer   answer.sdp.
             this.signalingConnection.sendToSignalingMsg({
-                type:'answer',
+                type:'1010',
+                devMode: 4,
+                devId:'725B4AC56CE7',
                 sdp:answer
             })
-
         }catch (e) {
             message.error("创建answer失败");
             console.error(`setRemoteDesc createAnswer Error : ${e}`)
@@ -108,18 +106,26 @@ class RTCEngine {
      * @param event
      * @returns {Promise<void>}
      */
-    addIcecandidate = async (event) => {
+    addIcecandidate = async (candidate) => {
         try {
-            await this.peerConnection.addIceCandidate(event.icecandidate);
+            console.log("IceCandiDateObj",candidate);
+            await this.peerConnection.addIceCandidate(candidate);
+            
+            //console.log("IceCandiDateObj send", icecandidate);
+
         }catch (e) {
             console.error(`addIcecandidate Error : ${e}`)
         }
     };
-
+    
     close = ()=>{
         this.peerConnection.close();
         this.peerConnection = null;
         this.onClose();
+    }
+    
+    onIcecandidate = async () => {
+        
     }
 
 
