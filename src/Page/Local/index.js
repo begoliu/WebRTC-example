@@ -25,13 +25,17 @@ class LocalPeerToPeer extends Component {
 
     //开始
     handleStart = () => {
-        navigator.mediaDevices.getUserMedia({video: true}).then(this.gotLocalMediaStream).catch(this.gotLocalMediaStreamErr);
-        
+         //navigator.mediaDevices.getUserMedia({video: true}).then(this.gotLocalMediaStream).catch(this.gotLocalMediaStreamErr);
+
         let pc = new RTCPeerConnection(this.state.servers);
+        console.log(pc);
+        pc.onicecandidate = function(event){
+            console.log(event);
+        };
         pc.onicecandidate = event => {
             console.log("ice-bego111", event);
         }
-        
+
     };
 
     //从设备中获取本地流
@@ -44,7 +48,6 @@ class LocalPeerToPeer extends Component {
             callDisabled:false
 
         });
-
         trace('got localStream successful!',mediaStream)
     };
     //获取本地流失败
