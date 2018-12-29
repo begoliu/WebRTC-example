@@ -15,36 +15,45 @@ class RTCEngine {
     
     //ice 步骤
     
-    // 1. 甲
     
     
     
-    constructor({
-         signalingConnection,
-    }) {
-        this.signalingConnection = signalingConnection;
+    constructor({signalingConnection:socket}) {
+        this.signalingConnection = socket;
     }
-
-
-    createPeerConnection = async () => {
-        let rtcDevice = new RTCPeerConnection({
+    
+    createPeerConnection = () => {
+        this.config = {
             iceServers: [{
-                urls: `stun:116.62.244.19:3478`,
-                username: 'demo',
-                password:'123456',
-                credential: 'turnserver'
+                url: "stun:116.62.244.19:3478"
             }]
-        });
-        this.peerConnection = rtcDevice;
-        console.log("ice-candidate", rtcDevice);
-        rtcDevice.onicecandidate = event => {
-            console.log("ice-candidate-event",event);
+        };
+        this.peerConnection = new RTCPeerConnection(this.config);
+        this.peerConnection.onicecandidate = event =>{
+            console.log("bego- ice-event",event.candidate);
+            
+            if(event.candidate !== null) {
+                let ice = {
+                    type:"candidate",
+                    label:event.candidate.sdpMLineIndex,
+                    id:event.candidate.sdpMid,
+                    candidate:event.candidate
+                };
+                console.log("bego- send-ice",ice);
+                this.signalingConnection.sendToSignalingMsg({
+                    type:"1011",
+                    devId: "725B4AC56CE7",
+                    devMode: 4,
+                    data:JSON.stringify(ice)
+                })
+            }
+            
+            
+            
         }
-
-
     };
 
-    onIceCandidate = async (event,socket) => {
+    onIceCandidate = async (event) => {
         try {
             //发送send icedate
             console.log("ice-candidate",event);
@@ -55,25 +64,17 @@ class RTCEngine {
         }
     };
 
-    onSignalingMessage = (msg) => {
-        switch (msg.type) {
-
-
-        }
-    };
-
-
+    
     setOffer = async (sdp) => {
         //接收signalingServer发送过来的的sdp
         console.log("setOffer",sdp);
-        const offer = {
-            type:'offer',
-            sdp:sdp.sdp
-        };
+    
         try {
-            let answer = await this.peerConnection.setRemoteDescription(offer);
-            console.log("设置offer成功",answer);
-            message.success("设置offer成功!");
+            await this.peerConnection.setRemoteDescription(sdp);
+            console.log("bego- set offer successful...", sdp);
+            //message.success("设置offer成功!");
+            await this.createAnswer();
+            
         }catch (e) {
             message.error("设置offer失败");
             console.error(`setRemoteDesc videoOffer Error : ${e}`)
@@ -87,14 +88,16 @@ class RTCEngine {
     createAnswer = async () => {
         try {
             const answer = await this.peerConnection.createAnswer();
-            console.log("send Answer", answer);
+            this.peerConnection.setLocalDescription(answer);
+            console.log("bego- create answer :", answer);
             //发送answer的sdp给signalingServer   answer.sdp.
             this.signalingConnection.sendToSignalingMsg({
                 type:'1010',
                 devMode: 4,
                 devId:'725B4AC56CE7',
                 sdp:answer
-            })
+            });
+            message.success("创建answer成功，发送answer成功！");
         }catch (e) {
             message.error("创建answer失败");
             console.error(`setRemoteDesc createAnswer Error : ${e}`)
@@ -108,26 +111,18 @@ class RTCEngine {
      */
     addIcecandidate = async (candidate) => {
         try {
-            console.log("IceCandiDateObj",candidate);
             await this.peerConnection.addIceCandidate(candidate);
-            
-            //console.log("IceCandiDateObj send", icecandidate);
-
+            console.log("bego- add-ice",candidate);
         }catch (e) {
             console.error(`addIcecandidate Error : ${e}`)
         }
     };
     
-    close = ()=>{
+    disconnect = ()=>{
         this.peerConnection.close();
         this.peerConnection = null;
-        this.onClose();
-    }
-    
-    onIcecandidate = async () => {
-        
-    }
-
+        this.signalingConnection.disconnect();
+    };
 
 }
 

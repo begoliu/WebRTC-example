@@ -50,9 +50,6 @@ export function receiveLogin(msg,socket) {
     switch (msg.result) {
         case 0 :
             message.success('socket连接成功');
-            let RTC = new RTCEngine({signalingConnection:socket});
-            RTC.createPeerConnection();
-            
             break;
         case 1 :
             message.error('设备被占用,连接失败');
@@ -67,29 +64,16 @@ export function receiveLogin(msg,socket) {
 }
 
 //接收sdp 数据包
-export function receiveSdp(desc,socket) {
+export function receiveSdp(desc,socket,rtc) {
     console.log(`[Client] receive offer sdp:`, JSON.parse(desc.sdp));
-    let answer = {
-        type:'1010',
-        devMode:4,
-        devId:desc.devId,
-        sdp:JSON.parse(desc.sdp).sdp
-    };
-    let RTC = new RTCEngine({signalingConnection:socket});
     //设置offer描述
-    RTC.setOffer(JSON.parse(desc.sdp));
-    console.log("rtc - setOffer",JSON.parse(desc.sdp));
-    // RTC.onicecandidate(ice => {
-    //     console.log("IceCandiDateObj-send",ice);
-    // });
-    return RTC;
+    rtc.setOffer(JSON.parse(desc.sdp));
 }
 
 
 
 //接收ice 数据包
 export function receiveIce(candidate,rtc) {
-    
     let params = JSON.parse(candidate.data);
     /**
      * iceCandidate对象
@@ -119,3 +103,6 @@ export function str2json(msg) {
 export function initSdk (type,cb) {
 
 }
+
+
+

@@ -1,19 +1,16 @@
 import EventEmitter from 'events';
-import {receiveLogin} from "../Util/connect";
 
 class SignalingConnection extends EventEmitter{
     constructor({socketURL, onOpen}) {
         super();
         this.sockURI = socketURL;
         this.onOpen = onOpen;
-        // this.cb = cb;
         this.connectToSocket();
         this.messageListeners = [];
 
     }
     connection = null;
-
-
+    
     /**
      * 连接socket
      * 
@@ -31,20 +28,12 @@ class SignalingConnection extends EventEmitter{
 
 
     };
-
-    /**
-     * 重连webSocket
-     */
-    reconnectToSocket = () => {
-
-
+    
+    /*断开*/
+    disconnect = () => {
+        
     };
-
-
-    createWebSocket = (callback) => {
-
-
-    };
+    
 
     /**
      * 发送信息到信令服务器
@@ -52,23 +41,28 @@ class SignalingConnection extends EventEmitter{
      */
     sendToSignalingMsg = msg => {
         let typeMsg;
+        let type;
+        let jsonMsg = msg;
         if(typeof msg !== 'string') {
+            type = msg.type;
             msg = JSON.stringify(msg);
         }else{
-            let type = JSON.parse(msg).type;
-            switch (type) {
-                case '1001':
-                    typeMsg = 'login';
-                    break;
-                case '1010':
-                    typeMsg = 'answer';
-                    break;
-                default:
-                    break;
-            }
+            type = JSON.parse(msg).type;
         }
-        
-        console.log(`[client send signaling] ${typeMsg} : `, JSON.stringify(msg));
+        switch (type) {
+            case '1001':
+                typeMsg = 'login';
+                break;
+            case '1010':
+                typeMsg = 'answer';
+                break;
+            case '1011':
+                typeMsg = 'iceCandidat';
+                break;
+            default:
+                break;
+        }
+        console.log(`bego- [client send signaling - ${typeMsg}] : `, jsonMsg);
         this.connection.send(msg);
     };
 

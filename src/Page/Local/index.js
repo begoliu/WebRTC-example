@@ -25,16 +25,16 @@ class LocalPeerToPeer extends Component {
 
     //开始
     handleStart = () => {
-         //navigator.mediaDevices.getUserMedia({video: true}).then(this.gotLocalMediaStream).catch(this.gotLocalMediaStreamErr);
+         navigator.mediaDevices.getUserMedia({video: true}).then(this.gotLocalMediaStream).catch(this.gotLocalMediaStreamErr);
 
-        let pc = new RTCPeerConnection(this.state.servers);
-        console.log(pc);
-        pc.onicecandidate = function(event){
-            console.log(event);
-        };
-        pc.onicecandidate = event => {
-            console.log("ice-bego111", event);
-        }
+        // let pc = new RTCPeerConnection(this.state.servers);
+        // console.log(pc);
+        // pc.onicecandidate = function(event){
+        //     console.log(event);
+        // };
+        // pc.onicecandidate = event => {
+        //     console.log("ice-bego111", event);
+        // }
 
     };
 
@@ -86,7 +86,10 @@ class LocalPeerToPeer extends Component {
         //console.log("localPC", localPC);
         localPC.onicecandidate = e => this.onIceCandiDate(remotePC,e);
         localPC.onconnectionstatechange = e => this.onIceStateChange(localPC,e);
-        remotePC.onicecandidate = e => this.onIceCandiDate(localPC,e);
+        //remotePC.onicecandidate = e => this.onIceCandiDate(localPC,e);
+        remotePC.onicecandidate = e => {
+            console.log("bego-ice", e);
+        };
         remotePC.onconnectionstatechange = e => this.onIceStateChange(remotePC,e);
         remotePC.ontrack = this.gotRemoteStream;
 
