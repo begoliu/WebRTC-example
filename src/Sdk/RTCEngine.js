@@ -12,7 +12,6 @@ class RTCEngine {
     // 8. 乙通过PC所提供的setLocalDescription()方法，将乙的SDP描述符交给乙的PC实例
     // 9. 乙将answer信令通过服务器发送给甲
     // 10. 甲接收到乙的answer信令后，将其中乙的SDP描述符提取出来，调用setRemoteDescripttion()方法交给甲自己的PC实例
-    
     //ice 步骤
     
     
@@ -42,14 +41,9 @@ class RTCEngine {
                 console.log("bego- send-ice",ice);
                 this.signalingConnection.sendToSignalingMsg({
                     type:"1011",
-                    devId: "725B4AC56CE7",
-                    devMode: 4,
                     data:JSON.stringify(ice)
                 })
             }
-            
-            
-            
         }
     };
 
@@ -63,18 +57,17 @@ class RTCEngine {
             message.error("监听ice失败");
         }
     };
-
     
-    setOffer = async (sdp) => {
+    setOffer = async (sdp,fn) => {
         //接收signalingServer发送过来的的sdp
-        console.log("setOffer",sdp);
-    
+        console.warn("setOffer",sdp);
+      
         try {
             await this.peerConnection.setRemoteDescription(sdp);
-            console.log("bego- set offer successful...", sdp);
-            //message.success("设置offer成功!");
+            message.success("设置offer成功!");
             await this.createAnswer();
-            
+            fn&&fn();
+
         }catch (e) {
             message.error("设置offer失败");
             console.error(`setRemoteDesc videoOffer Error : ${e}`)
@@ -84,7 +77,9 @@ class RTCEngine {
     /**
      * 创建answer并发送answer的sdp给signalingServer
      * @returns {Promise<void>}
+     * 8AEBB5C80B31
      */
+    
     createAnswer = async () => {
         try {
             const answer = await this.peerConnection.createAnswer();
@@ -93,8 +88,6 @@ class RTCEngine {
             //发送answer的sdp给signalingServer   answer.sdp.
             this.signalingConnection.sendToSignalingMsg({
                 type:'1010',
-                devMode: 4,
-                devId:'725B4AC56CE7',
                 sdp:answer
             });
             message.success("创建answer成功，发送answer成功！");
@@ -119,9 +112,11 @@ class RTCEngine {
     };
     
     disconnect = ()=>{
-        this.peerConnection.close();
+        
+        this.peerConnection === null || this.peerConnection.close();
         this.peerConnection = null;
         this.signalingConnection.disconnect();
+        
     };
 
 }

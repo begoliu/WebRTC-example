@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Button,message,Popover} from 'antd';
+import {Button, message, Popover, Tag} from 'antd';
 import SignalingConnection from '../../Sdk/SignalingConnection';
 import '../../Scss/device.scss';
 import {
@@ -17,7 +17,17 @@ class DevicePeer extends Component {
             visible:false,
             statusConnect:false,
             statusDisconnect:true,
-            icecandidate:[]
+            icecandidate:[],
+            // 设备ID
+            device_id:"",
+            frameData:{
+                width:"",
+                height:"",
+                decoded:undefined,
+                dropped:undefined,
+                received:undefined
+            },
+            mouseXY:[]
         }
 
     }
@@ -25,26 +35,50 @@ class DevicePeer extends Component {
     RTC = null;
     // localVideoRef = React.createRef();
     remoteVideoRef = React.createRef();
-    
+
+    /**
+     * 初始化
+     */
     init = () => {
         
-        this.Yfz = new SignalingConnection({
-            socketURL:`116.62.244.19:13001`,
-            onOpen:this.onOpen
+        
+        // await this.Yfz.connectToSocket("116.62.244.19:13000");
+
+        //监听ws关闭状态
+        this.Yfz.connection.addEventListener('close',() => {
+            this.setState({
+                statusConnect:false
+            }) 
         });
-        console.log("bego- socket",this.Yfz);
+
         this.RTC = new RTCEngine({signalingConnection:this.Yfz});
         this.RTC.createPeerConnection();
-        
-        console.log("bego- pc",this.RTC.peerConnection);
         this.RTC.peerConnection.ontrack = e => {
-            
             let remoteVideo = this.remoteVideoRef.current;
             if(remoteVideo.srcObject !== e.streams[0]){
                 console.log("bego- stream",e);
-                remoteVideo.srcObject = e.streams[0]
+                remoteVideo.srcObject = e.streams[0];
+                this.setInterval();
             }
         };
+        
+        this.Yfz.addMsgListener(async msg =>{
+            msg.type === "1001" && await receiveLogin(msg);
+            msg.type === "1002" && await receiveSdp(msg,this.Yfz);
+            msg.type === "1010" && await receiveSdp(msg,this.Yfz,this.RTC);
+            msg.type === "1011" && await receiveIce(msg,this.RTC);
+        });
+        
+        //操作流处理
+        // this.sendChannel = this.RTC.peerConnection.createDataChannel("sendDataChannel");
+        // this.sendChannel.onopen = () => {
+        //     let readyState = this.sendChannel.readyState;
+        //     if(readyState === 'open') {
+        //         this.sendChannel.send([
+        //             255,255,1,0,0,0,3,0,0,0,20,0,0,0,1,0,0,0,4,0,0,0,56,54,52,2, 49,50, 48,0
+        //         ])
+        //     }
+        // };
         
         
     };
@@ -61,67 +95,95 @@ class DevicePeer extends Component {
     };
 
     //连接设备
-    handleConnectDevice = () => {
-        this.setState({
+    handleConnectDevice = async (device_id) => {
+        await this.setState({
             visible:false,
             statusConnect:true,
-            statusDisConnect:false
+            statusDisConnect:false,
+            device_id
         });
 
+        this.Yfz = new SignalingConnection({
+            socketURL:`116.62.244.19:13000`,
+            devId:`D6DE58230B78`,
+            onOpen:this.onOpen
+        });
+        
         this.init();
         
         /**
          * 发送登录信息
          */
-        this.Yfz.addMsgListener(async msg => {
-            if(typeof msg === 'string') {
-                msg = JSON.parse(msg);
-            }
-            switch (msg.type) {
-                case '1001':
-                    receiveLogin(msg,this.Yfz);
-                    break;
-                case '1002':
-                    //await receiveSdp(msg,this.Yfz);
-                    break;
-                case '1010':
-                    await receiveSdp(msg,this.Yfz,this.RTC);
-                    //await this.RTC.createAnswer(this.Yfz);
-                    break;
-                case '1011':
-                    receiveIce(msg,this.RTC);
-                    
-                    break;
-                default:
-                    break;
-            }
-        });
-        this.setInterval();
-
+        // this.Yfz.addMsgListener(async msg => {
+        //   
+        //     if(typeof msg === 'string') {
+        //         msg = JSON.parse(msg);
+        //     }
+        //     switch (msg.type) {
+        //         case '1001':
+        //             receiveLogin(msg,this.Yfz.disconnect());
+        //             this.setState({
+        //                 statusDisconnect:false
+        //             });
+        //             break;
+        //         case '1002':
+        //             await receiveSdp(msg,this.Yfz);
+        //             break;
+        //         case '1010':
+        //             await receiveSdp(msg,this.Yfz,this.RTC);
+        //             await this.RTC.createAnswer(this.Yfz);
+        //             break;
+        //         case '1011':
+        //             receiveIce(msg,this.RTC);
+        //            
+        //             break;
+        //         default:
+        //             break;
+        //     }
+        // });
     };
+    
+    
+    
+    
 
     setInterval = () => {
+        console.log("bego-SS",this.RTC.peerConnection);
         setInterval(() => {
             this.RTC.peerConnection.getStats().then(res => {
                 res.forEach((it,index) => {
-                    if(it.type==="track") {
+                    if(it.type==="track" && it.kind === "video") {
                         console.log(`begos- ${index}:`, it);
+                        this.setState({
+                            frameData:{
+                                ...this.state.frameData,
+                                width:`${it.frameWidth}px`,
+                                height:`${it.frameHeight}px`,
+                                decoded:it.framesDecoded,
+                                dropped:it.framesDropped,
+                                received:it.framesReceived
+                            }
+                        })
+                        
                     }
-                    
                 })
             })
         },10000)
     };
     
+    //websocket打开状态赋值
+    ws_status_open = () => {
+        //8AEBB5C80B31
+        this.ws_status = "open";
+    };
 
 
-    onOpen = () => {
-        console.log("bego- connect open success");
+    onOpen = (fn) => {
+        console.log("WebSocket connect open success");
+        fn&&fn();
         //发送登录信息
         this.Yfz.sendToSignalingMsg({
-            type:'1001',
-            devMode: 4,
-            devId:'725B4AC56CE7'
+            type:'1001'
         });
     };
 
@@ -129,8 +191,7 @@ class DevicePeer extends Component {
     sendMsgFormat = (type,data) => {
         let msg = {
             type:type,
-            devMode: 4,
-            devId:'725B4AC56CE7'
+            devId:this.state.device_id
         };
         return JSON.stringify(msg);
     };
@@ -141,13 +202,25 @@ class DevicePeer extends Component {
     };
     
     handleDisconnectDevice = () => {
+        this.RTC.disconnect();
         this.setState({
             statusConnect:false,
             statusDisconnect:true
         });
         this.RTC.disconnect();
     };
+
     
+    handleDrop = (e) => {
+        console.log(e.nativeEvent.offsetX,e.nativeEvent.offsetY);
+    };
+    
+    //测试发送信息
+    handleSendToSignaling = () => {
+        this.Yfz.sendToSignalingMsg({
+            type:'1002'
+        })
+    };
     
     render() {
         return (
@@ -155,9 +228,9 @@ class DevicePeer extends Component {
                 <div className='btn-device'>
                     <Button type='primary'>start ws</Button>
                     <Button type='primary' onClick={this.start}>start</Button>
-                    <Button type='primary' disabled={this.state.statusConnect} onClick={this.handleConnectDevice}>connect</Button>
+                    <Button type='primary' disabled={this.state.statusConnect} onClick={() => this.handleConnectDevice("8AEBB5C80B31")}>connect</Button>
                     <Button type='primary' disabled={this.state.statusDisconnect} onClick={this.handleDisconnectDevice}>disconnect</Button>
-                    <Button type='primary' disabled>createOffer</Button>
+                    <Button type='primary' onClick={this.handleSendToSignaling}>send</Button>
                     <Button type='primary' disabled>setOffer</Button>
                     <Button type='primary' disabled>createAnswer</Button>
                     <Button type='primary' disabled>setAnswer</Button>
@@ -175,9 +248,20 @@ class DevicePeer extends Component {
                         <Button type='danger'>connect device</Button>
                     </Popover>
                 </div>
-                <div className='local-video'>
+                <div className={"local-dataChannel"}>
                     {/*<video ref={this.localVideoRef} autoPlay></video>*/}
-                    <video ref={this.remoteVideoRef} autoPlay  width="100%" height="100%"></video>
+                    <div style={{width:"200px",height:"100px",background:"#EEE"}} onDrag = {this.handleDrop} onSelect = {(e) => {
+                        console.log(e);
+                    }}>bego liu  </div>{JSON.stringify(this.state.mouseXY)}
+
+                    <br />
+                    <Tag>Deocded: {this.state.frameData.decoded}</Tag>
+                    <Tag>Dropped: {this.state.frameData.dropped}</Tag>
+                    <Tag>Received: {this.state.frameData.received}</Tag>
+                </div>
+                <div className='local-video'>
+                    <video ref={this.remoteVideoRef} autoPlay></video>
+                    
                 </div>
             </div>
         );

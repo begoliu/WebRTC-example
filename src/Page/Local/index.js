@@ -58,7 +58,10 @@ class LocalPeerToPeer extends Component {
     gotRemoteStream = (e) => {
         let remoteVideo = this.remoteVideoRef.current;
         if(remoteVideo.srcObject !== e.streams[0]){
-            remoteVideo.srcObject = e.streams[0]
+            let stream = e.streams[0];
+            console.log(e.streams[0]);
+            
+            remoteVideo.srcObject = stream;
         }
     };
 
@@ -106,8 +109,10 @@ class LocalPeerToPeer extends Component {
     };
 
     onCreateOfferSuccess = (desc) => {
+        console.log("bego---",desc);
         let {localPC,remotePC} = this.state;
         trace(`offer from localPC desc.sdp: ${desc.sdp}`);
+        
         localPC.setLocalDescription(desc).then(()=>{
             console.log("pc1 setLocalDescription complete createOffer");
         }).catch(err=>{

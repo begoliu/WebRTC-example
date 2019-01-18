@@ -19,7 +19,7 @@
     "ws": "^6.1.0"
   },
   "scripts": {
-    "start": "set port=13000 && react-app-rewired start",
+    "start": "set port=91 && react-app-rewired start",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"

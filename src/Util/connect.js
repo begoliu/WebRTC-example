@@ -45,8 +45,7 @@ export function sendIceSdp(candidate) {
  * 接收到signaling返回的login msg
  * @param msg {type:'_login' , data: { type:'1001' ...}}
  */
-export function receiveLogin(msg,socket) {
-    console.log("receiveLogin", msg);
+export function receiveLogin(msg,fn) {
     switch (msg.result) {
         case 0 :
             message.success('socket连接成功');
@@ -61,12 +60,17 @@ export function receiveLogin(msg,socket) {
             message.error("未知错误");
             break;
     }
+    if(msg.result === 0) {
+        console.log("-----");
+        fn&&fn()
+    }
 }
 
 //接收sdp 数据包
 export function receiveSdp(desc,socket,rtc) {
-    console.log(`[Client] receive offer sdp:`, JSON.parse(desc.sdp));
-    //设置offer描述
+    console.log(`[Client] receive offer sdp:`, JSON.parse(desc.sdp),rtc);
+    //设置offer描述.
+    
     rtc.setOffer(JSON.parse(desc.sdp));
 }
 
@@ -98,11 +102,22 @@ export function str2json(msg) {
     return JSON.parse(msg)
 }
 
-
-
-export function initSdk (type,cb) {
-
+/**
+ * 休眠
+ * @param numberMillis
+ * @returns {boolean}
+ * @constructor
+ */
+export default function Sleep(numberMillis) {
+    let now = new Date();
+    let exitTime = now.getTime() + numberMillis;
+    while (true) {
+        now = new Date();
+        if (now.getTime() > exitTime)
+            return true;
+    }
 }
+
 
 
 

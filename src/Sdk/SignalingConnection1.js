@@ -1,13 +1,12 @@
 import EventEmitter from 'events';
 
-class SignalingConnection extends EventEmitter{
-    constructor({socketURL,devId,onOpen}) {
+class SignalingConnection1 extends EventEmitter{
+    constructor({socketURL,onOpen}) {
         super();
         this.sockURI = socketURL;
         this.onOpen = onOpen;
         this.connectToSocket(socketURL);
         this.messageListeners = [];
-        this._devId = devId;
     }
     connection = null;
     
@@ -21,8 +20,11 @@ class SignalingConnection extends EventEmitter{
         this.connection.onopen = () => this.onOpen();
         this.connection.onmessage = event => {
             let msg = JSON.parse(event.data);
-            console.info(`[Client Received Message - ${this.LogPrintType(msg)}] : `,msg);
-            this.messageListeners.forEach(func => func(msg));
+            console.log(`[Client Received Message - ${this.LogPrintType(msg)}] : `, msg);
+            this.messageListeners.forEach(func => {
+                console.log(".....",func);
+                return func(msg)
+            });
         };
         this.connection.onclose = event => {
             console.log("webSocket connection closed.");
@@ -44,20 +46,17 @@ class SignalingConnection extends EventEmitter{
         this.connectToSocket(uri)
     }; 
     
-    
-
 
     /**
      * 发送信息到信令服务器
      * @param msg
      */
     sendToSignalingMsg = msg => {
-        if(typeof msg === 'string') {
-            msg = JSON.parse(msg);
+        if(typeof msg !== 'string') {
+            msg = JSON.stringify(msg);
         }
-        msg = {...msg,devMode:4,devId:this._devId};
-        console.info(`[Client Send Signaling - ${this.LogPrintType(msg)}] : `, msg);
-        this.connection.send(JSON.stringify(msg));
+        console.info(`[Client Send Signaling - ${this.LogPrintType(msg)}] : `, JSON.parse(msg));
+        this.connection.send(JSON.parse(msg));
     };
 
     /**
@@ -75,7 +74,7 @@ class SignalingConnection extends EventEmitter{
                 _typeMsg = 'Login';
                 break;
             case '1010':
-                _typeMsg = 'Offer | Answer';
+                _typeMsg = 'Answer';
                 break;
             case '1011':
                 _typeMsg = 'IceCandidat';
@@ -88,16 +87,11 @@ class SignalingConnection extends EventEmitter{
     };
 
     addMsgListener = func => {
-        console.log([...this.messageListeners]);
         this.messageListeners = [...this.messageListeners,func];
-        console.log("bego.....",this.messageListeners);
         return () => {
-            this.messageListeners = this.messageListeners.filter(f => {
-                console.log(this.messageListeners,f,func);
-                return f !==func
-            });
+            this.messageListeners = this.messageListeners.filter(f => f !==func);
         }
     };
 }
 
-export default SignalingConnection;
+export default SignalingConnection1;
