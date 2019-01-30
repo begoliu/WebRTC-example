@@ -77,6 +77,9 @@ class SignalingConnection extends EventEmitter{
             case '1010':
                 _typeMsg = 'Offer | Answer';
                 break;
+            case '1002':
+                _typeMsg = 'Heart';
+                break;
             case '1011':
                 _typeMsg = 'IceCandidat';
                 break;
@@ -88,9 +91,7 @@ class SignalingConnection extends EventEmitter{
     };
 
     addMsgListener = func => {
-        console.log([...this.messageListeners]);
         this.messageListeners = [...this.messageListeners,func];
-        console.log("bego.....",this.messageListeners);
         return () => {
             this.messageListeners = this.messageListeners.filter(f => {
                 console.log(this.messageListeners,f,func);

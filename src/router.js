@@ -9,8 +9,8 @@ class RootRouter extends Component {
     render() {
         return (
             <Switch>
-                <Route exact path="/" component={DevicePeer} />
-                <Route path="/Local" component={LocalPeer} />
+                <Route exact path="/sdk" component={DevicePeer} />
+                <Route path="/sdk/local" component={LocalPeer} />
             </Switch>
         );
     }

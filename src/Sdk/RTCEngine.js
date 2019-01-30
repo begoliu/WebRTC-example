@@ -1,4 +1,5 @@
 import {message} from 'antd';
+import Sleep from "../Util/connect";
 class RTCEngine {
     
     //sdp 步骤
@@ -14,11 +15,10 @@ class RTCEngine {
     // 10. 甲接收到乙的answer信令后，将其中乙的SDP描述符提取出来，调用setRemoteDescripttion()方法交给甲自己的PC实例
     //ice 步骤
     
-    
-    
-    
     constructor({signalingConnection:socket}) {
         this.signalingConnection = socket;
+        this.peerConnection = null;
+        this.dataChannel = null;
     }
     
     createPeerConnection = () => {
@@ -28,15 +28,20 @@ class RTCEngine {
             }]
         };
         this.peerConnection = new RTCPeerConnection(this.config);
+        //打开数据通道
+        this.dataChannel = this.peerConnection.createDataChannel('sendDataChannel');
+        this.dataChannel.onopen = this.onSendChannelOpen;
+        this.dataChannel.onclose = this.onSendChannelClose;
+        this.dataChannel.onmessage = this.onReceiveMessageCallback;
+        
         this.peerConnection.onicecandidate = event =>{
-            console.log("bego- ice-event",event.candidate);
-            
+            console.log("ICE",event.candidate);
             if(event.candidate !== null) {
                 let ice = {
                     type:"candidate",
                     label:event.candidate.sdpMLineIndex,
                     id:event.candidate.sdpMid,
-                    candidate:event.candidate
+                    candidate:JSON.stringify(event.candidate)
                 };
                 console.log("bego- send-ice",ice);
                 this.signalingConnection.sendToSignalingMsg({
@@ -86,6 +91,7 @@ class RTCEngine {
             this.peerConnection.setLocalDescription(answer);
             console.log("bego- create answer :", answer);
             //发送answer的sdp给signalingServer   answer.sdp.
+            Sleep(500);
             this.signalingConnection.sendToSignalingMsg({
                 type:'1010',
                 sdp:answer
@@ -99,17 +105,35 @@ class RTCEngine {
 
     /**
      * 接收signalingServer的icecandidate到本地的peerConnection中
-     * @param event
      * @returns {Promise<void>}
+     * @param candidate
      */
     addIcecandidate = async (candidate) => {
-        try {
-            await this.peerConnection.addIceCandidate(candidate);
-            console.log("bego- add-ice",candidate);
-        }catch (e) {
-            console.error(`addIcecandidate Error : ${e}`)
+        let iceData = JSON.parse(candidate.data);
+        let iceCandidate = null;
+        if (iceData.type === 'candidate') {
+            /**
+             * 添加iceCandidate对象
+             * @type {{candidate: *, sdpMLineIndex: *, sdpMid: *}}
+             */
+            iceCandidate = {
+                candidate:iceData.candidate,
+                sdpMLineIndex:iceData.label,
+                sdpMid:iceData.id,
+            };
+            try {
+                await this.peerConnection.addIceCandidate(iceCandidate);
+                console.log("RTC_ADD_ICE:",iceCandidate);
+            }catch (e) {
+                console.error(`addIcecandidate Error : ${e}`)
+            }
+            
+        }else if(iceData.type === 'remove-candidates'){
+            console.warn(`remove-candidates`,iceData.candidates);
         }
     };
+    
+    
     
     disconnect = ()=>{
         
@@ -118,7 +142,21 @@ class RTCEngine {
         this.signalingConnection.disconnect();
         
     };
-
+    
+    //open dataChannel
+    onSendChannelOpen = () => {
+        console.log(`[DataChannel send channel is open ok]`);
+        
+        
+    };
+    //close dataChannel
+    onSendChannelClose = () => {
+        console.log(`[DataChannel send channel is close ok]`);
+    };
+    //message dataChannel
+    onReceiveMessageCallback = (event) => {
+        console.log(`[DataChannel Receive msg]`, event.data);
+    }
 }
 
 export default RTCEngine;

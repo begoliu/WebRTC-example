@@ -113,7 +113,7 @@ function Int2Byte(num,len) {
     for(let i = 4; i > 0  ; i--){
         if(num%Math.pow(base,i-1) === num) {
             bytes.push(0);
-            console.log(bytes);
+            // console.log(bytes);
         }else{
             if(num%Math.pow(base,i-1) === 0) {
                 bytes.push(num/Math.pow(base,i-1));
@@ -132,41 +132,45 @@ function Int2Byte(num,len) {
 // console.log(Int2Byte(106584));
 // console.log(1280/256);
 // console.log(parseInt(t,10),t);
-const WebSocket = require('ws');
-let ws = new WebSocket(`ws://116.62.244.19:13000`);
-let _login = {type:'1001',devId:"D6DE58230B78",devMode:4};
-ws.onopen = () => {
-     ws.send(JSON.stringify(_login));
-};
-ws.onmessage = event => {
-    let msg = JSON.parse(event.data);
-    console.log(`[Client Received Message - ${LogPrintType(msg)}] : `, msg);
-};
+// const WebSocket = require('ws');
+// let ws = new WebSocket(`ws://116.62.244.19:13000`);
+// let _login = {type:'1001',devId:"D6DE58230B78",devMode:4};
+// ws.onopen = () => {
+//      ws.send(JSON.stringify(_login));
+// };
+// ws.onmessage = event => {
+//     let msg = JSON.parse(event.data);
+//     console.log(`[Client Received Message - ${LogPrintType(msg)}] : `, msg);
+// };
+//
+//
+//
+//
+// function LogPrintType(msg) {
+//     if(typeof msg === "string") {
+//         msg = JSON.parse(msg)
+//     }
+//     let _typeMsg;
+//     switch (msg.type) {
+//         case '1001':
+//             _typeMsg = 'Login';
+//             break;
+//         case '1010':
+//             _typeMsg = 'Answer';
+//             break;
+//         case '1011':
+//             _typeMsg = 'IceCandidat';
+//             break;
+//         default:
+//             _typeMsg = "Unknown";
+//             break;
+//     }
+//     return _typeMsg;
+// };
 
 
-
-
-function LogPrintType(msg) {
-    if(typeof msg === "string") {
-        msg = JSON.parse(msg)
-    }
-    let _typeMsg;
-    switch (msg.type) {
-        case '1001':
-            _typeMsg = 'Login';
-            break;
-        case '1010':
-            _typeMsg = 'Answer';
-            break;
-        case '1011':
-            _typeMsg = 'IceCandidat';
-            break;
-        default:
-            _typeMsg = "Unknown";
-            break;
-    }
-    return _typeMsg;
-};
+console.log(Int2Byte(700, 4), Int2Byte(1260, 4));
+console.log(Int2Byte(720, 4), Int2Byte(1280, 4));
 
 
  

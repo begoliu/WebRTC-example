@@ -22,7 +22,6 @@ class SignalingConnection1 extends EventEmitter{
             let msg = JSON.parse(event.data);
             console.log(`[Client Received Message - ${this.LogPrintType(msg)}] : `, msg);
             this.messageListeners.forEach(func => {
-                console.log(".....",func);
                 return func(msg)
             });
         };

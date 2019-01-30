@@ -1,6 +1,5 @@
 import {message} from 'antd';
-import RTCEngine from '../Sdk/RTCEngine';
-import SignalingConnection from '../Sdk/SignalingConnection';
+
 
 
 
@@ -61,16 +60,14 @@ export function receiveLogin(msg,fn) {
             break;
     }
     if(msg.result === 0) {
-        console.log("-----");
         fn&&fn()
     }
 }
 
 //接收sdp 数据包
-export function receiveSdp(desc,socket,rtc) {
+export function receiveSdp(desc,rtc) {
     console.log(`[Client] receive offer sdp:`, JSON.parse(desc.sdp),rtc);
     //设置offer描述.
-    
     rtc.setOffer(JSON.parse(desc.sdp));
 }
 
@@ -78,18 +75,7 @@ export function receiveSdp(desc,socket,rtc) {
 
 //接收ice 数据包
 export function receiveIce(candidate,rtc) {
-    let params = JSON.parse(candidate.data);
-    /**
-     * iceCandidate对象
-     * @type {{candidate: *, sdpMLineIndex: *, sdpMid: *}}
-     */
-    let iceCandidate = {
-        candidate:params.candidate,
-        sdpMLineIndex:params.label,
-        sdpMid:params.id,
-    };
-    rtc.addIcecandidate(iceCandidate);
-
+    rtc.addIcecandidate(candidate);
 }
 
 //json转str
