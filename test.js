@@ -168,9 +168,13 @@ function Int2Byte(num,len) {
 //     return _typeMsg;
 // };
 
+//
+// console.log(Int2Byte(780, 2), Int2Byte(1260, 4));
+// console.log(Int2Byte(720, 4), Int2Byte(1280, 4));
+console.log([1, 2, 3,4].length);
 
-console.log(Int2Byte(700, 4), Int2Byte(1260, 4));
-console.log(Int2Byte(720, 4), Int2Byte(1280, 4));
+
+
 
 
  

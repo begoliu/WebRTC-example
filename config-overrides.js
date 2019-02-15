@@ -4,7 +4,7 @@ const fs = require('fs');
 const {injectBabelPlugin} = require('react-app-rewired');
 // const rewireBabelLoader = require('react-app-rewire-babel-loader');
 const appDirectory = fs.realpathSync(process.cwd());
-const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
+// const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
 // const { paths } = require('react-app-rewired');
 // // require normalized overrides
@@ -16,13 +16,13 @@ const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
 module.exports = function override(config, env) {
 
-    console.log("bego---",process.env.NODE_ENV);
+    // console.log("bego---",process.env.NODE_ENV);
     config.output = {
         ...config.output,
         publicPath:'/sdk/'
     };
     // do stuff with the webpack config...
-    console.log(env,config);
+    // console.log(env,config);
     config = injectBabelPlugin(
         ['import', { libraryName: 'antd', libraryDirectory: 'es', style: 'css' }],
         config,

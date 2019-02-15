@@ -6,6 +6,7 @@ import {
     receiveLogin
 } from '../../Util/connect';
 import RTCEngine from "../../Sdk/RTCEngine";
+import {Int2Byte} from "../../Util/handleMouse";
 
 
 class DevicePeer extends Component {
@@ -25,6 +26,8 @@ class DevicePeer extends Component {
                 dropped: undefined,
                 received: undefined
             },
+            //指令处理的次数
+            handleInstructCount:null,
             mouseXY: []
         }
 
@@ -76,6 +79,10 @@ class DevicePeer extends Component {
                 this.setInterval();
             }
         };
+        //初始指令次数
+        this.setState({
+            handleInstructCount:0
+        })
     };
 
     //获取本地媒体
@@ -180,26 +187,79 @@ class DevicePeer extends Component {
     };
 
 
-    handleDrop = (e) => {
-        // console.log(e.nativeEvent.offsetX,e.nativeEvent.offsetY);
+    handleDrop = async (e,type) => {
+        console.log(e.nativeEvent.offsetX,e.nativeEvent.offsetY);
+        await this.handleSetScreen(4,{x:e.nativeEvent.offsetX,y:e.nativeEvent.offsetY,key:type})
     };
     
-    handleSetScreen = (event) => {
-        let inputData = "255, 255, 1, 0, 0, 0, 3, 0, 0, 0, 20, 0, 0, 0, 1, 0, 0, 0, 4, 0, 0, 0, 56, 54, 52, 2, 49, 50, 48, 0";
-        let buffer = new ArrayBuffer(inputData.length);
-        for (let i =0; i<=inputData.split(',').length;i++){
-            buffer[i] = inputData.split(',')[i];
-        }
-      
-        let buffers = new Buffer([255,255,120,0,0,0,4,0,0,0,32,0,0,0,1,0,0,0,24,0,0,0,0,0,0,0,188,2,0,0,236,4,0,0,0,225,245,5,68,0,0,0,1,0,0,0]);
-        console.log(Buffer.isBuffer(buffers),buffers);
+    handleSetScreen = async (type,{x,y,key}) => {
+        // let inputData = "255, 255, 1, 0, 0, 0, 3, 0, 0, 0, 20, 0, 0, 0, 1, 0, 0, 0, 4, 0, 0, 0, 56, 54, 52, 2, 49, 50, 48, 0";
+        // let buffer = new ArrayBuffer(inputData.length);
+        // for (let i =0; i<=inputData.split(',').length;i++){
+        //     buffer[i] = inputData.split(',')[i];
+        // }
+        // [255,255,120,0,0,0,4,0,0,0,32,0,0,0,1,0,0,0,24,0,0,0,0,0,0,0,188,2,0,0,236,4,0,0,0,225,245,5,68,0,0,0,1,0,0,0]
+        // [50, 53, 53, 44,32, 50, 53, 53,44, 32, 49, 44, 32, 48, 44, 32, 48, 44, 32, 48, 44, 32, 51, 44, 32, 48, 44, 32, 48, 44, 32, 48, 44, 32, 50, 48, 44, 32, 48, 44, 32, 48, 44, 32, 48, 44, 32, 49, 44, 32, 48, 44, 32, 48, 44, 32, 48, 44, 32, 52, 44, 32, 48, 44, 32, 48, 44, 32, 48, 44, 32, 53, 54, 44, 32, 53, 52, 44, 32, 53, 50, 44, 32, 50, 44, 32, 52, 57, 44, 32, 53, 48, 44, 32, 52, 56, 44, 32, 48]
         
-       
-        if (this.RTC && this.RTC.dataChannel && event && this.RTC.dataChannel.readyState === 'open') {
+        //几点触摸
+        await this.setState({
+            handleInstructCount:this.state.handleInstructCount + 1
+        });
+        console.log(this.state.handleInstructCount);
+        
+        /*------- 客户端相关数据 begin ----------*/
+        let clientCmdType = [1,0,0,0];    // int cmd_type = {CLIENT_INFO : 1}
+        let clientInfoData = [...Int2Byte(4,2),...Int2Byte(0,2),...Int2Byte(360,4),...Int2Byte(640,4)]; //  short client_type = {web:4,webChat_sp:5} , short reserved = 0 , int width , int height
+        let clientInfoLen = Int2Byte(clientInfoData.length,4); 
+        /*------- 客户端相关数据 end ----------*/
+
+        /*------- 触摸/按键相关数据 begin ----------*/
+        let touchType = Int2Byte(1,4);  // input_type = {input_key:0,input_STouch:1,input_MTouch:2,input_TTouch:3}   issue: key 按键消息 STouch 一点触摸  MTouch 二点触摸 TTouch 三点触摸
+        // let touchData = [...Int2Byte(0,4),...Int2Byte(x,4),...Int2Byte(y,4),0,225,245,5,68,0,0,0,Int2Byte(key,4)];
+        let touchData = [...Int2Byte(0,4),...Int2Byte(x,4),...Int2Byte(y,4),0,0,0,0,0,0,0,0,Int2Byte(key,4)];
+        // let touchKey = Int2Byte(1,4); 
+        let touchLen = Int2Byte(touchData.length,4);
+        /*------- 触摸/按键相关数据 end ----------*/
+        
+        let buffers = null;
+        if(type === 3) {
+            //总长度
+            let dataLen = Int2Byte(clientCmdType.length + clientInfoData.length + clientInfoLen.length,4);
+            buffers = new Buffer([255,255,...Int2Byte(this.state.handleInstructCount,4),...Int2Byte(type,2),0,0,...dataLen,...clientCmdType,...clientInfoLen,...clientInfoData]);
+        }
+        if(type === 4) {
+            // onTouchEvent: ACTION_MOVE, PointerCount1, Pointer0, id:0, x:621.51447, y:437.39252, major:68.92522437.39252, pressure:1.0
+            // onTouchEvent: ACTION_UP, PointerCount1, Pointer0, id:0, x:621.51447, y:437.39252, major:68.92522437.39252, pressure:1.0
+            // InputManager: sendInput:   [255, 255, 119, 0, 0,0,4,0,0,0,32,0,0,0,1,0,0,0,24,0,0,0,0,0,0,0,110,2,0,0,181,1,0,0,0,225,245,5,68,0,0,0,2,0,0,0,]
+                                        //[255, 255, 1, 0, 0, 0, 0, 0, 0, 29, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 30, 0, 0, 0, 30, 0, 0, 0, 0, 225, 245, 5, 68, 0, 0, 0, 0]
+            // InputManager: sendInput: [255,255,
+            // 120,0,0,0, seq
+            // 4,0,  type short
+            // 0,0,  reserved
+            // 32,0,0,0,  len
+            // 1,0,0,0,  input_type
+            // 24,0,0,0, len
+            // touchPoint
+            // 0,0,0,0,  _id
+            // 188,2,0,0, x
+            // 236,4,0,0, y
+            // 0,225,245,5, pressure
+            // 68,0,0,0,  major
+            // 1,0,0,0,  type
+            // ]
+            let dataLen = Int2Byte(touchType.length+touchData.length+touchLen.length,4);
+            buffers = new Buffer([255,255,...Int2Byte(this.state.handleInstructCount,4),...Int2Byte(type,2),0,0,...dataLen,...touchType,...touchLen,...touchData]);
+        }
+        
+        
+        if (this.RTC && this.RTC.dataChannel && this.RTC.dataChannel.readyState === 'open') {
+            console.log(Buffer.isBuffer(buffers),buffers);
             this.RTC.dataChannel.send(buffers);
         }else{
             console.error(`dataChannel close`)
         }
+        
+  
     };
 
     //测试发送信息
@@ -229,9 +289,9 @@ class DevicePeer extends Component {
                             onClick={() => this.handleConnectDevice("8AEBB5C80B31")}>connect</Button>
                     <Button type='primary' disabled={this.state.statusDisconnect}
                             onClick={this.handleDisconnectDevice}>disconnect</Button>
-                    <Button type='primary' onClick={() => this.handleSetScreen(true)}>竖屏</Button>
-                    <Button type='primary' onClick={() => this.handleSetScreen(false)}>横屏</Button>
-                    <Button type='primary' disabled>createAnswer</Button>
+                    <Button type='primary' onClick={() => this.handleSetScreen(3,{})}>竖屏</Button>
+                    <Button type='primary' onClick={() => this.handleSetScreen(0,{})}>横屏</Button>
+                    <Button type='primary' onClick={() => this.handleSetScreen(4,{x:25,y:25})}>操作</Button>
                     <Button type='primary' disabled>setAnswer</Button>
                     <Popover
                         placement="bottom"
@@ -250,11 +310,7 @@ class DevicePeer extends Component {
                 </div>
                 <div className={"local-dataChannel"}>
                     {/*<video ref={this.localVideoRef} autoPlay></video>*/}
-                    <div style={{width: "200px", height: "100px", background: "#EEE"}} onDrag={this.handleDrop}
-                         onSelect={(e) => {
-                             console.log(e);
-                         }}>bego liu
-                    </div>
+                    <div className={"canvasTouch"} style={{width: "320px", height: "180px", background: "#EEE"}} onClick={this.handleDrop} />
                     {JSON.stringify(this.state.mouseXY)}
 
                     <br/>
@@ -263,7 +319,12 @@ class DevicePeer extends Component {
                     <Tag>Received: {this.state.frameData.received}</Tag>
                 </div>
                 <div className='local-video'>
-                    <video ref={this.remoteVideoRef} autoPlay></video>
+                    
+                    <video ref={this.remoteVideoRef} autoPlay 
+                           onMouseDown={(event) => this.handleDrop(event,0)} 
+                           onMouseUp={(event) => this.handleDrop(event,1)} 
+                           // onMouseMove={(event) => this.handleDrop(event,2)} 
+                    />
 
                 </div>
             </div>

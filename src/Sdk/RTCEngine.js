@@ -146,8 +146,6 @@ class RTCEngine {
     //open dataChannel
     onSendChannelOpen = () => {
         console.log(`[DataChannel send channel is open ok]`);
-        
-        
     };
     //close dataChannel
     onSendChannelClose = () => {

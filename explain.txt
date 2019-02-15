@@ -1,0 +1,14 @@
+
+adb connect 192.168.14.81
+
+adb logcat -s MY_RTC
+
+
+
+adb shell 
+
+logcat | grep InputHandler
+
+
+adb devices
+adb -s xxx(devices_id) shell

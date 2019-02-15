@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>mouseXY</title>
+    <script src="./utils/mouse.js"></script>
+</head>
+<body>
+<style>
+    *{
+        margin:0;
+        padding:0;
+    }
+</style>
+    <div id="mouse" style="width:320px;height:180px;background:#EEE;margin:20px;border:1px solid red;"></div>
+
+    <script type="text/javascript">
+        function mouseXY(event){
+            if(event){
+                event = event || window.event;
+                return {mX:event.offsetX+1,mY:event.offsetY+1}
+            }
+            return {mX:null,mY:null}
+        }
+        let objCanvas = document.getElementById('mouse');
+        objCanvas.onmousedown = function(event){
+            let {mX,mY} = mouseXY(event);
+            console.log(`offset : ${mX} , ${mY}  client :　${event.clientX + 1} , ${event.clientY+1}`);
+        };
+        objCanvas.onclick = function(event){
+            let {mX,mY} = mouseXY(event);
+            console.log(`单击 : ${mX},${mY}`);
+        };
+        objCanvas.ondblclick = function(event){
+            let {mX,mY} = mouseXY(event);
+            console.log(`双击 : ${mX},${mY}`);
+        }
+        
+        
+        
+    </script>
+</body>
+</html>
