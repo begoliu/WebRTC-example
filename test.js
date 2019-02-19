@@ -171,11 +171,73 @@ function Int2Byte(num,len) {
 //
 // console.log(Int2Byte(780, 2), Int2Byte(1260, 4));
 // console.log(Int2Byte(720, 4), Int2Byte(1280, 4));
-console.log([1, 2, 3,4].length);
+// console.log([1, 2, 3,4].length);
+
+
+
+let protocolData = {
+  "keyboard": {
+      type:4,
+      data:{
+          type:0,
+          scanCode:158,
+          keyCode:4
+      }
+  },
+  "screen":{
+      type:3,
+      data:{
+          type:1,
+          w:720,
+          h:1280,
+      }
+  },
+  "touch":{
+      type:4,
+      data:{
+          type:1,
+          x:30,
+          y:40
+      }
+  },  
+    
+};
+function xx(kind,{type,data}){
+    
+}
+
+let _data = {key:1,value:2};
+//推断是否为JSON对象
+// if(typeof(_data) === "object" &&
+//     Object.prototype.toString.call(_data).toLowerCase() === "[object object]" && !_data.length){
+//     console.log("is JSON 0bject");
+// }
+
+//推断是否存在某字段
+// console.info(_data["key"] !== undefined); //此方式不严谨，假设key定义了 并就是赋值为undefined 则会出问题
+console.info("key" in _data);
+// console.info(_data.hasOwnProperty("key"));
+
+
+// let keys = ["key","value"];
+// function isExistKeys(_data,keys) {
+//     for(let key of keys) {
+//         if(!(key in _data)) {
+//             return false;
+//         }
+//     }
+//     return true;
+// }
+//
+// console.log(isExistKeys(_data, keys));
 
 
 
 
+
+let types = ['back','home','menu','volume_up','volume_down'];
+
+console.log(types.indexOf('back1'));
 
  
  
