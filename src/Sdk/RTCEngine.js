@@ -140,6 +140,7 @@ class RTCEngine {
         this.peerConnection === null || this.peerConnection.close();
         this.peerConnection = null;
         this.signalingConnection.disconnect();
+        this.dataChannel.close();
         
     };
     

@@ -30,7 +30,9 @@ class DevicePeer extends Component {
             },
             //指令处理的次数
             handleInstructCount:null,
-            mouseXY: []
+            mouseXY: [],
+            
+            screen:false
         }
 
     }
@@ -45,6 +47,11 @@ class DevicePeer extends Component {
      */
     init = () => {
         // await this.Yfz.connectToSocket("116.62.244.19:13000");
+        this.Yfz = new SignalingConnection({
+            socketURL: `116.62.244.19:13000`,
+            devId: `D6DE58230B78`,
+            onOpen: this.onOpen
+        });
 
         //监听ws关闭状态
         this.Yfz.connection.addEventListener('close', () => {
@@ -59,8 +66,6 @@ class DevicePeer extends Component {
 
         this.RTC = new RTCEngine({signalingConnection: this.Yfz});
         this.RTC.createPeerConnection();
-
-
         console.log("bego-RTC", this.RTC.peerConnection);
         this.Yfz.addMsgListener(async msg => {
             //msg 指接收的登录信息
@@ -88,7 +93,9 @@ class DevicePeer extends Component {
         //初始指令次数
         this.setState({
             handleInstructCount:0,
-        })
+        });
+
+        setTimeout(this.handleDisconnectDevice,5000)
         
     };
 
@@ -114,20 +121,18 @@ class DevicePeer extends Component {
             device_id
         });
 
-        this.Yfz = new SignalingConnection({
-            socketURL: `116.62.244.19:13000`,
-            devId: `D6DE58230B78`,
-            onOpen: this.onOpen
-        });
+        
 
         this.init();
+        setInterval(this.init,20000);
 
 
     };
 
 
     setInterval = () => {
-        this.RTC.peerConnection.getStats().then(res => {
+        this.RTC.peerConnection && this.RTC.peerConnection.getStats().then(res => {
+            console.log(res);
             res.forEach((it, index) => {
                 if (it.type === "track" && it.kind === "video") {
                     console.log(`begos- ${index}:`, it);
@@ -162,7 +167,7 @@ class DevicePeer extends Component {
             type: '1001'
         });
         //心跳
-        this.sendHeartBag();
+        // this.sendHeartBag();
         
         
     };
@@ -182,7 +187,10 @@ class DevicePeer extends Component {
     };
 
     handleDisconnectDevice = () => {
-        this.RTC.disconnect();
+        this.Yfz.sendToSignalingMsg({
+            type: '1003'
+        });
+        this.Yfz.disconnect();
         this.setState({
             statusConnect: false,
             statusDisconnect: true
@@ -195,6 +203,7 @@ class DevicePeer extends Component {
         let _x = e.nativeEvent.offsetX;
         let _y = e.nativeEvent.offsetY;
         let _target = e.target;
+        if(e.nativeEvent.which !== 1 && e.nativeEvent.button !== 0) return;
         console.log("InputMangerDown:",e.nativeEvent.offsetX,e.nativeEvent.offsetY);
         await this.handleStream("touch",{
             type:4,
@@ -311,6 +320,9 @@ class DevicePeer extends Component {
             scan:0,
             key:0
         };
+        /**
+         * 目前key值只要不等于0
+         */
         //返回键
         if(type === 'back') {
             _code = {
@@ -367,13 +379,20 @@ class DevicePeer extends Component {
     
     //心跳
     sendHeartBag = () => {
+        console.log("head",this.Yfz);
         setInterval(() => {
             this.Yfz.sendToSignalingMsg({
                 type:'1002'
             })
         },1000*100)
-        
     };
+
+    handleScreen = (flag) => {
+        this.setState({
+            screen:flag
+        })
+    }
+    ;
     render() {
         return (
             <div className='main-device'>
@@ -392,7 +411,14 @@ class DevicePeer extends Component {
                                 w:640,
                                 h:360
                             }
-                    })}>横屏</Button>
+                    })}>窗体</Button>
+                    <Button type='primary' onClick={() => this.handleScreen(false)} disabled = {this.state.statusDisconnect}
+                            >横屏</Button>
+                    <Button type='primary' onClick={() => this.handleScreen(true)}  disabled = {this.state.statusDisconnect}
+                    >竖屏</Button>
+                    
+                    
+                    
                     <Button type='primary'  disabled = {this.state.statusDisconnect}
                             onMouseDown={(event) => this.handleKey("back",1)}
                             onMouseUp={(event) => this.handleKey("back",0)}>返回</Button>
@@ -433,7 +459,7 @@ class DevicePeer extends Component {
                     <Tag>Received: {this.state.frameData.received}</Tag>
                 </div>
                 <div className='local-video'>
-                    <video ref={this.remoteVideoRef} autoPlay onMouseDown={this.handleDrop} />
+                    <video className={this.state.screen ? 'vertical' : 'across'} ref={this.remoteVideoRef} autoPlay onMouseDown={this.handleDrop} />
                 </div>
             </div>
         );

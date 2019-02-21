@@ -57,7 +57,9 @@ class SignalingConnection extends EventEmitter{
         }
         msg = {...msg,devMode:4,devId:this._devId};
         console.info(`[Client Send Signaling - ${this.LogPrintType(msg)}] : `, msg);
-        this.connection.send(JSON.stringify(msg));
+
+        //this.connection.readyState === 2 &&
+         this.connection.send(JSON.stringify(msg));
     };
 
     /**
@@ -79,6 +81,9 @@ class SignalingConnection extends EventEmitter{
                 break;
             case '1002':
                 _typeMsg = 'Heart';
+                break;
+            case '1003':
+                _typeMsg = 'UnLogin';
                 break;
             case '1011':
                 _typeMsg = 'IceCandidat';

@@ -14,8 +14,10 @@ $width:10px;
             height:360px;
             background:#A9A9A9;
             border:1px solid #045DB1;
-            transform: rotate(90deg);
-            margin-top:100px;
+            &.vertical{
+                margin-top:100px;
+                transform: rotate(90deg);
+            }
         }
     }
     .canvasTouch {

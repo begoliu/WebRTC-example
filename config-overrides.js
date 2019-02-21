@@ -15,14 +15,15 @@ const appDirectory = fs.realpathSync(process.cwd());
 // console.log("bego ---------",config);
 
 module.exports = function override(config, env) {
-
-    // console.log("bego---",process.env.NODE_ENV);
-    config.output = {
-        ...config.output,
-        publicPath:'/sdk/'
-    };
+    
+    // config.output = {
+    //     ...config.output,
+    //     publicPath:'/sdk/'
+    // };
+    
+    
+    console.log(config);
     // do stuff with the webpack config...
-    // console.log(env,config);
     config = injectBabelPlugin(
         ['import', { libraryName: 'antd', libraryDirectory: 'es', style: 'css' }],
         config,
