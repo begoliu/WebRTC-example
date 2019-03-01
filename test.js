@@ -215,7 +215,7 @@ let _data = {key:1,value:2};
 
 //推断是否存在某字段
 // console.info(_data["key"] !== undefined); //此方式不严谨，假设key定义了 并就是赋值为undefined 则会出问题
-console.info("key" in _data);
+// console.info("key" in _data);
 // console.info(_data.hasOwnProperty("key"));
 
 
@@ -235,9 +235,14 @@ console.info("key" in _data);
 
 
 
-let types = ['back','home','menu','volume_up','volume_down'];
+// let types = ['back','home','menu','volume_up','volume_down'];
+//
+// console.log(types.indexOf('back1'));
 
-console.log(types.indexOf('back1'));
+let _json = {
+    type:'122xd',
+    val:3
+};
 
  
  

@@ -23,9 +23,21 @@ class RTCEngine {
     
     createPeerConnection = () => {
         this.config = {
-            iceServers: [{
-                url: "stun:116.62.244.19:3478"
-            }]
+            iceServers: [
+                // {
+                //     url: "stun:116.62.244.19:3478"
+                // },
+                // {
+                //     url:"turn:116.62.244.19:3478?transport=udp",
+                //     username:"demo",
+                //     credential: "1234567"
+                // },
+                // {
+                //     url:"turn:116.62.244.19:3478?transport=tcp",
+                //     username:"demo",
+                //     credential: "123456"
+                // }
+            ]
         };
         this.peerConnection = new RTCPeerConnection(this.config);
         //打开数据通道
@@ -49,6 +61,18 @@ class RTCEngine {
                     data:JSON.stringify(ice)
                 })
             }
+        };
+
+        // this.peerConnection.onicegatheringstatechange = ev => {
+        //     console.log("ice-change",ev);
+        // }
+        
+        this.peerConnection.onicegatheringstatechange = ev => {
+            console.log("ice-change",ev.target.onicecandidate,ev.candidate);
+        };
+        
+        this.peerConnection.onconnectionstatechange = ev => {
+            console.log("ice-change-connect",ev.target.onicecandidate,ev.candidate)  
         }
     };
 
@@ -129,6 +153,15 @@ class RTCEngine {
             }
             
         }else if(iceData.type === 'remove-candidates'){
+            //0: {label: -1, id: "0", candidate: "candidate:559267639 1 udp 2122202367 ::1 33799 typ host generation 0 ufrag 23Vw network-id 3"}
+            // 1: {label: -1, id: "0", candidate: "candidate:1510613869 1 udp 2122129151 127.0.0.1 40540 typ host generation 0 ufrag 23Vw network-id 2"}
+            // 2: {label: -1, id: "0", candidate: "candidate:3363825369 1 udp 2113937151 192.168.14.6…typ host generation 0 ufrag 23Vw network-cost 999"}
+            // 3: {label: -1, id: "0", candidate: "candidate:842163049 1 udp 1677729535 119.139.196.2…rt 56384 generation 0 ufrag 23Vw network-cost 999"}
+            // this.peerConnection.remove
+            // await this.peerConnection.addIceCandidate({candidate:''});
+            iceCandidate = {
+                type:"endOfCandidates"
+            };
             console.warn(`remove-candidates`,iceData.candidates);
         }
     };

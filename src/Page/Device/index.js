@@ -49,7 +49,7 @@ class DevicePeer extends Component {
         // await this.Yfz.connectToSocket("116.62.244.19:13000");
         this.Yfz = new SignalingConnection({
             socketURL: `116.62.244.19:13000`,
-            devId: `D6DE58230B78`,
+            devId: `D6DE58230B78`,//
             onOpen: this.onOpen
         });
 
@@ -95,7 +95,7 @@ class DevicePeer extends Component {
             handleInstructCount:0,
         });
 
-        setTimeout(this.handleDisconnectDevice,5000)
+        // setTimeout(this.handleDisconnectDevice,5000)
         
     };
 
@@ -120,11 +120,16 @@ class DevicePeer extends Component {
             statusDisConnect: false,
             device_id
         });
-
-        
-
         this.init();
-        setInterval(this.init,20000);
+        // setInterval(this.init,20000);
+        await this.handleStream("screen",{
+            type:3,
+            data:{
+                type:1,
+                w:640,
+                h:360
+            }
+        })
 
 
     };
@@ -167,7 +172,7 @@ class DevicePeer extends Component {
             type: '1001'
         });
         //心跳
-        // this.sendHeartBag();
+        this.sendHeartBag();
         
         
     };
