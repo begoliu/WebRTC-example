@@ -46,13 +46,16 @@ class DevicePeer extends Component {
      * 初始化
      */
     init = () => {
-        // await this.Yfz.connectToSocket("116.62.244.19:13000");
+        window.oncontextmenu = (e) => {
+            e.preventDefault();  
+        };
+        
         this.Yfz = new SignalingConnection({
             socketURL: `116.62.244.19:13000`,
             devId: `D6DE58230B78`,//
             onOpen: this.onOpen
         });
-
+        // await this.Yfz.connectToSocket("116.62.244.19:13000");
         //监听ws关闭状态
         this.Yfz.connection.addEventListener('close', () => {
             this.setState({
@@ -63,10 +66,14 @@ class DevicePeer extends Component {
         this.Yfz.connection.addEventListener('open', () => {
             console.log(`bego--open`);
         });
-
+     
         this.RTC = new RTCEngine({signalingConnection: this.Yfz});
+        
         this.RTC.createPeerConnection();
-        console.log("bego-RTC", this.RTC.peerConnection);
+        
+        if(!this.RTC.peerConnection){
+            return;
+        }
         this.Yfz.addMsgListener(async msg => {
             //msg 指接收的登录信息
             msg.type === "1001" && await receiveLogin(msg);
@@ -86,6 +93,8 @@ class DevicePeer extends Component {
                 setInterval(this.setInterval,10000);
                 // this.setInterval();
             }
+            // console.log(remoteVideo);
+            
             this.setState({
                 statusDisconnect:false
             })
@@ -166,6 +175,7 @@ class DevicePeer extends Component {
 
     onOpen = (fn) => {
         console.log("WebSocket connect open success");
+        console.log(fn);
         fn && fn();
         //发送登录信息
         this.Yfz.sendToSignalingMsg({
@@ -463,7 +473,7 @@ class DevicePeer extends Component {
                     <Tag>Dropped: {this.state.frameData.dropped}</Tag>
                     <Tag>Received: {this.state.frameData.received}</Tag>
                 </div>
-                <div className='local-video'>
+                <div className='local-video' ref={`local_video`}>
                     <video className={this.state.screen ? 'vertical' : 'across'} ref={this.remoteVideoRef} autoPlay onMouseDown={this.handleDrop} />
                 </div>
             </div>

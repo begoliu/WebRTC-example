@@ -1,12 +1,11 @@
 
+#协议日志
 adb connect 192.168.14.81
 
 adb logcat -s MY_RTC
 
-
-
+#信令日志
 adb shell 
-
 logcat | grep InputHandler
 
 

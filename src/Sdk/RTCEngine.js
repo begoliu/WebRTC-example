@@ -24,22 +24,34 @@ class RTCEngine {
     createPeerConnection = () => {
         this.config = {
             iceServers: [
-                // {
-                //     url: "stun:116.62.244.19:3478"
-                // },
-                // {
-                //     url:"turn:116.62.244.19:3478?transport=udp",
-                //     username:"demo",
-                //     credential: "1234567"
-                // },
-                // {
-                //     url:"turn:116.62.244.19:3478?transport=tcp",
-                //     username:"demo",
-                //     credential: "123456"
-                // }
+                {
+                    urls: "stun:116.62.244.19:3478"
+                },
+                {
+                    urls:"turn:116.62.244.19:3478?transport=udp",
+                    username:"demo",
+                    credential: "1234567"
+                },
+                {
+                    urls:"turn:116.62.244.19:3478?transport=tcp",
+                    username:"demo",
+                    credential: "123456"
+                }
             ]
         };
-        this.peerConnection = new RTCPeerConnection(this.config);
+        try {
+            // alert(window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection);
+            if (window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection) {
+                let RTC = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
+                this.peerConnection = new RTC(this.config);
+            }else{
+                alert('当前浏览器不支持，请使用57版本及以上的谷歌浏览器(Chrome)体验');
+                return;
+            } 
+        }catch (err) {
+            alert(JSON.stringify(err));
+            throw err.message;
+        }
         //打开数据通道
         this.dataChannel = this.peerConnection.createDataChannel('sendDataChannel');
         this.dataChannel.onopen = this.onSendChannelOpen;
